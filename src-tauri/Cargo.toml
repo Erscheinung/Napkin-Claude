@@ -1,6 +1,6 @@
 [package]
 name = "napkin"
-version = "0.1.0"
+version = "0.1.1"
 description = "A paper-napkin skin for Claude Code"
 authors = ["Erscheinung"]
 license = "MIT"

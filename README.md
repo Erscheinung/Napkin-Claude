@@ -48,14 +48,24 @@ inside. Napkin just puts it on paper, shows you what it spilled, and lets you wi
 
 ## Install
 
-### macOS (download)
+Download the latest build from [**Releases**](https://github.com/Erscheinung/Napkin-Claude/releases/latest):
 
-Grab `Napkin_<version>_*.dmg` from [Releases](https://github.com/Erscheinung/Napkin-Claude/releases) and
-drag Napkin to Applications. The build isn't notarized yet, so the first time, right-click → **Open**
-(or run `xattr -dr com.apple.quarantine /Applications/Napkin.app`).
+| Platform | File | Notes |
+|---|---|---|
+| macOS (Apple silicon + Intel) | `Napkin_<version>_universal.dmg` | Drag Napkin to Applications. |
+| Linux (Debian/Ubuntu) | `Napkin_<version>_amd64.deb` | `sudo apt install ./Napkin_<version>_amd64.deb` |
+| Linux (any distro) | `Napkin_<version>_amd64.AppImage` | `chmod +x` it, then run it. |
+| Windows 10/11 | `Napkin_<version>_x64-setup.exe` | Run the installer. |
 
-You'll need [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and logged in, plus git
-(`xcode-select --install`).
+Every platform needs [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and logged in,
+plus git (macOS: `xcode-select --install`; Windows: [Git for Windows](https://git-scm.com/download/win)).
+
+The builds aren't code-signed yet:
+- **macOS:** right-click → **Open** the first time, or run `xattr -dr com.apple.quarantine /Applications/Napkin.app`.
+- **Windows:** SmartScreen may warn. Choose **More info → Run anyway**.
+
+Linux and Windows builds are produced by CI but haven't been hand-tested yet, so please
+[open an issue](https://github.com/Erscheinung/Napkin-Claude/issues) if something looks off.
 
 ### macOS (from source)
 
@@ -70,8 +80,7 @@ This builds `Napkin.app` and copies it to `/Applications`. To get a `.dmg` inste
 ## Build for Linux and Windows
 
 Napkin is a [Tauri 2](https://tauri.app) app, so it builds on all three platforms. macOS is the primary
-target. **Linux and Windows builds are set up (code paths and CI) but haven't been hand-tested yet**, so please
-open an issue if something looks off.
+target, and CI builds and tests Linux and Windows on every push.
 
 **Linux** (Debian/Ubuntu; for Fedora/Arch, see [Tauri's prerequisites](https://tauri.app/start/prerequisites/)):
 
