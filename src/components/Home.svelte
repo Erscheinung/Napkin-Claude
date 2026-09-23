@@ -1,39 +1,39 @@
 <script lang="ts">
   import { app } from "../lib/state.svelte";
-  import { sketch } from "../lib/rough";
   import { ago, basename, greeting, STATUS_LABEL, tildify } from "../lib/format";
   import Critter from "./Critter.svelte";
+  import headline from "../assets/ref/headline.png";
+  import check from "../assets/ref/check.png";
+  import folder from "../assets/ref/folder.png";
+  import ring from "../assets/ref/coffee-ring.png";
 
   const last = $derived(app.onTable[0] ?? app.crumpled[0]);
   const home = $derived(app.info?.home);
   const recent = $derived([...app.projects].filter((p) => p.exists).sort((a, b) => b.last_active - a.last_active).slice(0, 6));
   const cards = $derived([...app.onTable].sort((a, b) => a.created_at - b.created_at).slice(0, 4));
 
-  const CLAY = { stroke: "#e0764e", fill: "#f7d7c7", double: true, radius: 6, width: 1.7 };
-  const GRAPHITE = { stroke: "#35322e", fill: "#fbf9f4", double: true, radius: 6, width: 1.7 };
-  const KEY = { stroke: "#5f5a52", radius: 3, width: 1.1, pad: 3, roughness: 0.8 };
 </script>
 
 <div class="desk">
   <div class="drag strip"></div>
 
-  <section class="hero paper napkin-edge" data-fx="hero">
+  <section class="hero sheet-hero" data-fx="hero">
     <div class="mascot"><Critter size={118} mood="hero" /></div>
     <div class="copy">
       <p class="hello">{greeting(new Date(app.now))}</p>
-      <h1 class="ink-bleed"><span data-fx="title">what are we making?</span></h1>
+      <h1><img class="headline" src={headline} alt="what are we making?" data-fx="title" /></h1>
       <p class="sub">start a fresh napkin in any folder, or pick up where you left off.</p>
 
       <div class="actions">
         <div class="action">
-          <button class="btn big" use:sketch={CLAY} onclick={() => app.newNapkin()} data-fx="primary">
+          <button class="btn big clay" onclick={() => app.newNapkin()} data-fx="primary">
             <span>new napkin in…</span>
-            <span class="kbd" use:sketch={KEY}>⌘N</span>
+            <span class="kbd">⌘N</span>
           </button>
           <span class="caption">choose a folder</span>
         </div>
         <div class="action">
-          <button class="btn big" use:sketch={GRAPHITE} disabled={!last} onclick={() => last && app.open(last.id)}>
+          <button class="btn big" disabled={!last} onclick={() => last && app.open(last.id)}>
             <span>resume last</span>
           </button>
           <span class="caption">
@@ -46,7 +46,7 @@
         {#if !app.info}
           <span class="muted">looking for Claude Code…</span>
         {:else if app.info.claude}
-          <span class="green"><span class="check">✓</span> Claude Code {app.info.claude_version ?? ""}</span>
+          <img class="check" src={check} alt="✓" /><span class="green">Claude Code {app.info.claude_version ?? ""}</span>
           at {tildify(app.info.claude, home)}
           {#if !app.info.git}<span class="red"> · no git, so no erasing</span>{/if}
         {:else}
@@ -59,10 +59,10 @@
     <div class="zigzag rule"></div>
     <p class="tips">
       <b>tip:</b>
-      <span><span class="kbd" use:sketch={KEY}>⌘K</span> to jump anywhere</span>
-      <span><span class="kbd" use:sketch={KEY}>⌘N</span> new napkin</span>
-      <span><span class="kbd" use:sketch={KEY}>⌘O</span> open a folder</span>
-      <span><span class="kbd" use:sketch={KEY}>⌘,</span> settings</span>
+      <span><span class="kbd">⌘K</span> to jump anywhere</span>
+      <span><span class="kbd">⌘N</span> new napkin</span>
+      <span><span class="kbd">⌘O</span> open a folder</span>
+      <span><span class="kbd">⌘,</span> settings</span>
     </p>
   </section>
 
@@ -72,9 +72,7 @@
       {#each recent as p (p.path)}
         <div class="row" class:gone={!p.exists}>
           <div class="line">
-            <svg class="folder" viewBox="0 0 26 20" width="23" height="18" aria-hidden="true">
-              <path d="M2 4.5 L2.4 17.6 L22.8 17.2 L23.4 6.8 L12 7 L10.2 3.6 L2.6 3.8 Z M2.4 8.6 L23 8.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" />
-            </svg>
+            <img class="folder" src={folder} alt="" />
             <span class="name">{p.name}</span>
             <span class="when">{ago(p.last_active, app.now)}</span>
           </div>
@@ -96,11 +94,11 @@
     </section>
 
     <section class="table">
-      <h2 class="underlined">on the table</h2>
+      <h2 class="underlined heading">on the table</h2>
       <div class="cards">
         {#each cards as n, i (n.id)}
           {@const s = app.live[n.id]?.status ?? "resting"}
-          <button class="card paper napkin-edge" class:low={i % 2 === 1} onclick={() => app.open(n.id)} data-fx="card">
+          <button class="card sheet-card" class:low={i % 2 === 1} onclick={() => app.open(n.id)} data-fx="card">
             <Critter size={40} mood={s} />
             <span class="card-text">
               <span class="card-title">{n.title}</span>
@@ -111,11 +109,7 @@
           <p class="muted empty">nothing here. that's a clean table.</p>
         {/each}
       </div>
-      <svg class="coffee" viewBox="0 0 200 200" aria-hidden="true">
-        <circle cx="100" cy="100" r="88" fill="rgba(170,140,100,0.045)" />
-        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(150,118,80,0.16)" stroke-width="2.2" filter="url(#fibers)" />
-        <circle cx="101" cy="99" r="84" fill="none" stroke="rgba(150,118,80,0.07)" stroke-width="5" />
-      </svg>
+      <img class="coffee" src={ring} alt="" />
     </section>
   </div>
 </div>
@@ -136,12 +130,11 @@
     z-index: 3;
   }
   .hero {
-    --press: 24px;
     margin-top: calc(6.4vh - 30px);
     display: grid;
     grid-template-columns: auto 1fr;
     column-gap: 30px;
-    padding: 58px 60px 42px 75px;
+    padding: 26px 26px 16px 41px;
   }
   .mascot {
     padding-top: 34px;
@@ -152,19 +145,17 @@
     color: var(--ink-2);
   }
   h1 {
-    font-family: var(--marker);
-    font-size: clamp(44px, 4.95vw, 96px);
-    color: #3a3733;
-    /* P8: a paper-colored stroke erodes Patrick Hand into a thin marker line */
-    -webkit-text-stroke: 2px var(--napkin);
-    paint-order: fill stroke;
-    line-height: 1.02;
-    margin: 4px 0 12px;
-    letter-spacing: 0.2px;
+    margin: 6px 0 10px;
+    line-height: 0;
+  }
+  /* the reference's own marker lettering (ink pooling at the stroke ends) */
+  .headline {
+    width: clamp(300px, 32.5vw, 640px);
+    height: auto;
   }
   .sub {
     font-size: 19px;
-    margin: 0 0 32px;
+    margin: 0 0 22px;
   }
   .actions {
     display: flex;
@@ -178,7 +169,8 @@
   }
   .btn.big {
     font-size: 21px;
-    padding: 9px 30px 11px;
+    min-height: 50px;
+    padding: 0 18px 1px;
   }
   .btn .kbd {
     font-size: 10px;
@@ -190,18 +182,21 @@
     padding-left: 10px;
   }
   .claude {
-    margin: 30px 0 0;
+    margin: 24px 0 0;
     font-size: 16px;
     color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .check {
-    font-weight: 700;
-    font-size: 20px;
-    font-family: var(--hand);
+    width: 20px;
+    height: 20px;
+    margin: -4px 2px 0 -4px;
   }
   .rule {
     grid-column: 1 / -1;
-    margin: 36px 12px 16px -4px;
+    margin: 26px 12px 12px -4px;
   }
   .tips {
     grid-column: 1 / -1;
@@ -233,6 +228,7 @@
   /* notebook paper: red header rule, blue lines under every line of text */
   .recent {
     --paper-bg: var(--notebook);
+    --tex: var(--tex-notebook);
     padding: 24px 0 18px;
     align-self: start;
   }
@@ -255,10 +251,9 @@
     align-items: center;
   }
   .folder {
-    color: var(--ink-2);
     flex: none;
-    width: 23px;
-    margin-right: 0;
+    width: 26px;
+    height: 19px;
     align-self: center;
   }
   .name {
@@ -317,14 +312,13 @@
     z-index: 1;
   }
   .card {
-    --press: 9px;
     display: flex;
     gap: 14px;
     align-items: flex-start;
     width: min(242px, 47%);
     flex: none;
-    min-height: 112px;
-    padding: 30px 20px 22px 22px;
+    min-height: 118px;
+    padding: 16px 6px 8px 8px;
     text-align: left;
   }
   .card.low {
@@ -347,12 +341,13 @@
     font-size: 13.5px;
     color: var(--ink-2);
   }
+  /* the reference's coffee ring; its top is tucked under the second card, as in the reference */
   .coffee {
     position: absolute;
-    width: 146px;
-    height: 146px;
-    left: calc(242px + 29px + 80px);
-    top: 180px;
+    width: 172px;
+    height: 110px;
+    left: 348px;
+    top: 194px;
     pointer-events: none;
     z-index: 0;
   }

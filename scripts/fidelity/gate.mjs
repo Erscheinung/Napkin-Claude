@@ -77,8 +77,9 @@ Object.keys(PATCHES).forEach((name, i) => {
   const r = a[i], m = b[i];
   const d = Math.max(Math.abs(r.r - m.r), Math.abs(r.g - m.g), Math.abs(r.b - m.b));
   check("G1 color", name, d <= 8, `Δmax ${d.toFixed(1)} (ref ${[r.r, r.g, r.b].map(Math.round)} vs ${[m.r, m.g, m.b].map(Math.round)})`);
-  check("G2 quiet", name, m.fine <= r.fine * 1.6 + 1, `σ ${m.fine.toFixed(2)} vs ref ${r.fine.toFixed(2)}`);
-  check("G3 streaks", name, m.low <= r.low * 1.5 + 1, `lowσ ${m.low.toFixed(2)} vs ref ${r.low.toFixed(2)}`);
+  // two-sided: too loud fails, and so does dead-flat paper (the reference has grain and crumple)
+  check("G2 grain", name, m.fine <= r.fine * 1.6 + 1 && m.fine >= r.fine * 0.55, `σ ${m.fine.toFixed(2)} vs ref ${r.fine.toFixed(2)} (0.55×–1.6×)`);
+  check("G3 crumple", name, m.low <= r.low * 1.5 + 1 && m.low >= r.low * 0.45, `lowσ ${m.low.toFixed(2)} vs ref ${r.low.toFixed(2)} (0.45×–1.5×)`);
 });
 
 // reference rects in window points (reference px ÷ 1.25 on a 1600×1000 window)

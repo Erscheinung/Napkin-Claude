@@ -73,8 +73,8 @@ export const api = {
   napkins: () => invoke<Napkin[]>("napkins_list"),
   create: (project: string, title?: string, resumeSession?: string) =>
     invoke<Napkin>("napkin_create", { project, title, resumeSession }),
-  open: (id: string, cols: number, rows: number, onData: Channel<ArrayBuffer>) =>
-    invoke<Spawned>("napkin_open", { id, cols, rows, onData }),
+  open: (id: string, cols: number, rows: number, doodle: boolean, onData: Channel<ArrayBuffer>) =>
+    invoke<Spawned>("napkin_open", { id, cols, rows, doodle, onData }),
   attach: (id: string) => invoke<NapkinEvent[]>("napkin_attach", { id }),
   write: (id: string, data: string) => invoke<void>("pty_write", { id, data }),
   resize: (id: string, cols: number, rows: number) => invoke<void>("pty_resize", { id, cols, rows }),
@@ -85,6 +85,7 @@ export const api = {
   changes: (id: string, from?: string, to?: string) => invoke<Changes>("napkin_changes", { id, from, to }),
   fileDiff: (id: string, from: string, to: string, path: string) =>
     invoke<string>("napkin_file_diff", { id, from, to, path }),
+  rebase: (id: string) => invoke<Napkin>("napkin_rebase", { id }),
   checkpoint: (id: string, label: string) => invoke<string>("napkin_checkpoint", { id, label }),
   rollback: (id: string, cp: string, paths?: string[], label?: string) =>
     invoke<RestoreReport>("napkin_rollback", { id, cp, paths, label }),

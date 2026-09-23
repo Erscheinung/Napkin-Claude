@@ -74,23 +74,25 @@ tiny vanilla JS with fine-grained reactivity. That keeps the chrome cheap next t
 Each checkpoint ends in a working, committed state.
 
 - [x] **CP0 — Foundations.** git repo, PLAN.md, CLAUDE.md, README with credit, Tauri 2 + Svelte 5 scaffold that builds.
-- [ ] **CP1 — A napkin is a real terminal.** PTY spawn/resize/write/kill, xterm paper theme, multiple
+- [x] **CP1 — A napkin is a real terminal.** PTY spawn/resize/write/kill, xterm paper theme, multiple
       napkins alive at once, drag-and-drop file paths, PATH probe, Claude version on home.
-- [ ] **CP2 — The desk.** Home screen from the reference (sidebar, hero, recent projects, on the table),
+- [x] **CP2 — The desk.** Home screen from the reference (sidebar, hero, recent projects, on the table),
       napkin persistence, resume last / continue / new napkin in folder, ⌘N ⌘O ⌘1-9 ⌘W.
-- [ ] **CP3 — Blast radius.** Shadow-git boundary at napkin start, hook-injected events, live status
+- [x] **CP3 — Blast radius.** Shadow-git boundary at napkin start, hook-injected events, live status
       (working / needs you / done), changed-files list with +/−, diff viewer, per-turn checkpoints,
       rollback to any checkpoint (itself undoable), per-file revert, crumple dialog.
-- [ ] **CP4 — Sketch napkin.** rough.js canvas (rect / ellipse / diamond / line / arrow / pen / text), select,
+- [x] **CP4 — Sketch napkin.** rough.js canvas (rect / ellipse / diamond / line / arrow / pen / text), select,
       move, label, undo, and saving to `<project>/.napkin/sketches/` (self-ignoring dir). "Send to Claude"
       exports PNG + ASCII + a shape spec (names, boxes, arrows between shapes) and pastes an
       `@`-reference into the prompt.
-- [ ] **CP5 — Claude draws back.** Opt-in appended system prompt tells Claude the `.napkin.json`
+- [x] **CP5 — Claude draws back.** Opt-in appended system prompt tells Claude the `.napkin.json`
       shape schema. The app reloads sketches when Claude writes them.
-- [ ] **CP6 — Ship it.** `scripts/install.sh` (build and copy to /Applications), GitHub Actions
+- [x] **CP6 — Ship it.** `scripts/install.sh` (build and copy to /Applications), GitHub Actions
       release (universal `.dmg`), README install docs, Gatekeeper notes.
-- [ ] **CP7 — Polish.** ⌘K jump palette, settings (fonts, terminal font size, doodle-back toggle),
-      "the tab" usage meter (investigate statusline `rate_limits`), coffee-ring easter egg.
+- [~] **CP7 — Polish.** Done: ⌘K palette, settings (terminal ink size, doodle-back), "the tab" usage
+      meter (statusline `rate_limits`), coffee ring. Next: hand-test Windows/Linux, notarized macOS
+      builds, drag-to-reorder napkins, sketch pan/zoom persistence.
+- [x] **CP8 — Fidelity.** Reference-sampled material library + two-sided fidelity gate (docs/DESIGN.md).
 
 ## Risks and mitigations
 

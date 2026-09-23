@@ -159,7 +159,7 @@ class NapkinTerm {
       ch.onmessage = (buf) => this.term.write(new Uint8Array(buf));
       try {
         this.fitNow();
-        const r = await api.open(this.id, this.term.cols, this.term.rows, ch);
+        const r = await api.open(this.id, this.term.cols, this.term.rows, settings.doodleBack, ch);
         this.gen = r.gen;
         app.setRunning(this.id, true);
         const l = app.ensureLive(this.id);

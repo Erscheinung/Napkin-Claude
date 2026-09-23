@@ -7,3 +7,6 @@ src-tauri/gen/schemas/
 .napkin/
 .vite/
 scripts/fidelity/out/
+
+# iCloud Desktop sync conflict copies
+* 2.*

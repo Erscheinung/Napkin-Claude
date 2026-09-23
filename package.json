@@ -10,7 +10,8 @@
     "tauri": "tauri",
     "app": "tauri dev",
     "bundle": "tauri build",
-    "gate": "node scripts/fidelity/gate.mjs"
+    "gate": "node scripts/fidelity/gate.mjs",
+    "screens": "node scripts/fidelity/screens.mjs"
   },
   "dependencies": {
     "@fontsource/courier-prime": "5.3.0",

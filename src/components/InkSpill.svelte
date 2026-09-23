@@ -1,6 +1,5 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import { sketch, PEN } from "../lib/rough";
   import { ask } from "@tauri-apps/plugin-dialog";
   import { api, type Changes } from "../lib/api";
   import { app, type Turn } from "../lib/state.svelte";
@@ -38,6 +37,7 @@
       if (mine !== seq) return;
       changes = c;
       error = null;
+      if (app.fixtureExtra === "diff" && !openPath && c.files.length) toggle(c.files.find((f) => f.status === "M")?.path ?? c.files[0].path);
       if (openPath && c.files.some((f) => f.path === openPath)) loadDiff(openPath);
     } catch (e) {
       if (mine === seq) error = String(e);
@@ -118,6 +118,18 @@
     if (ok) rollback(t.before, `erased back to before scribble ${t.n}`);
   }
 
+  async function rebase() {
+    try {
+      const fresh = await api.rebase(id);
+      const cur = app.napkin(id);
+      if (cur) Object.assign(cur, { boundary: fresh.boundary, tracking: true, tracking_note: null });
+      error = null;
+      refresh();
+    } catch (e) {
+      app.flash(String(e), "red");
+    }
+  }
+
   async function checkpoint() {
     try {
       await api.checkpoint(id, `fold · ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
@@ -179,6 +191,11 @@
         <span class="count">{changes.files.length} file{changes.files.length === 1 ? "" : "s"}</span>
         <span class="green">+{totals.add}</span>
         <span class="red">−{totals.del}</span>
+      {:else if error && /bad object|unknown revision|not a valid object/i.test(error)}
+        <span class="lost">
+          this napkin's ink record went missing (its snapshots were cleared).
+          <button class="link" onclick={rebase}>start a fresh record</button>
+        </span>
       {:else if error}
         <span class="red small">{error}</span>
       {:else}
@@ -266,8 +283,8 @@
 
   {#if n?.tracking}
     <footer>
-      <button class="btn small" use:sketch={PEN.small} onclick={checkpoint} disabled={acting} title="fold the napkin here — a spot you can always come back to"><span>⌐ fold here</span></button>
-      <button class="btn small danger" use:sketch={PEN.danger} onclick={rollbackAll} disabled={busy || acting || !changes?.files.length}>
+      <button class="btn small" onclick={checkpoint} disabled={acting} title="fold the napkin here — a spot you can always come back to"><span>⌐ fold here</span></button>
+      <button class="btn small danger" onclick={rollbackAll} disabled={busy || acting || !changes?.files.length}>
         <span>wipe clean</span>
       </button>
     </footer>
@@ -334,6 +351,10 @@
   }
   .count {
     font-weight: 700;
+  }
+  .lost {
+    font-size: 13.5px;
+    color: var(--ink-2);
   }
   .scope {
     margin-left: auto;

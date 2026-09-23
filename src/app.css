@@ -1,27 +1,30 @@
-/* Napkin design system — see docs/DESIGN.md for the principles (P1–P10) these implement. */
+/* Napkin design system — docs/DESIGN.md.
+   The material (paper, strokes, frames, mascot) is sampled from docs/reference.png by
+   scripts/fidelity/extract-assets.sh. Sizes below are reference px ÷ 1.25 → CSS px. */
 :root {
-  /* P2: surfaces differ by hue (values measured from docs/reference.png) */
-  --desk: #dcd4c5;
-  --napkin: #fdfaf4; /* cool off-white */
-  --pad: #fefbed; /* warm cream, ruled */
-  --notebook: #faf3e0; /* yellow cream */
-  --paper: var(--napkin);
+  --desk: #dbd2c4;
+  --napkin: #f8f5ee;
+  --pad: #faf7e8;
+  --notebook: #f7f0dc;
   --paper-2: #f1ece0;
 
-  --rule: rgba(150, 155, 165, 0.32);
-  --rule-blue: rgba(96, 120, 180, 0.3);
-  --margin-red: rgba(214, 112, 88, 0.62);
+  --tex-desk: url("./assets/ref/tex-desk.png") 0 0 / 784px 400px;
+  --tex-napkin: url("./assets/ref/tex-napkin.png") 0 0 / 608px 264px;
+  --tex-notebook: url("./assets/ref/tex-notebook.png") 0 0 / 640px 72px;
 
-  /* P8: graphite, never black */
-  --ink: #35322e;
-  --ink-2: #5f5a52;
+  --rule-blue: rgba(96, 120, 180, 0.3);
+  --margin-red: rgba(214, 112, 88, 0.55);
+
+  /* graphite, never black */
+  --ink: #36322e;
+  --ink-2: #5d5850;
   --ink-3: #8a847a;
   --ink-4: #b7b1a6;
 
   --clay: #e0764e;
   --clay-deep: #c9562e;
   --clay-fill: #f7d7c7;
-  --red-ink: #b8392b;
+  --red-ink: #b3352a;
   --blue-ink: #2c47a3;
   --green-ink: #2f6b34;
 
@@ -30,12 +33,6 @@
   --type: "Courier Prime", "Courier New", ui-monospace, monospace;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* P1: quiet, isotropic grain only — no creases, no streaks */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .26 0 0 0 0 .2 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* desk only: soft large blotches */
-  --mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0035' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .39 0 0 0 0 .3 0 0 0 .12 -.03'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
-
-  /* P3: papers lie flat */
   --shadow-flat: 0 1px 1px rgba(70, 58, 40, 0.1), 0 3px 8px -2px rgba(70, 58, 40, 0.12);
 
   color-scheme: light;
@@ -46,6 +43,8 @@
   line-height: 1.35;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* ink sits in the paper: a hair of bleed on every glyph */
+  text-shadow: 0 0 0.45px rgba(54, 50, 46, 0.35);
 }
 
 * {
@@ -61,8 +60,8 @@ body,
 }
 
 body {
-  background-color: var(--desk);
-  background-image: var(--grain), var(--mottle);
+  /* warm wash over the sampled desk (calibrated by the gate's G1) */
+  background: linear-gradient(rgba(251, 230, 200, 0.25), rgba(251, 230, 200, 0.25)), var(--tex-desk) repeat, var(--desk);
   user-select: none;
   -webkit-user-select: none;
   cursor: default;
@@ -79,6 +78,7 @@ button {
   border: 0;
   padding: 0;
   cursor: pointer;
+  text-shadow: inherit;
 }
 
 input,
@@ -101,12 +101,18 @@ strong {
   font-weight: 700;
 }
 
+img {
+  -webkit-user-drag: none;
+}
+
 /* ── paper ──────────────────────────────────────────────────────────── */
 
-/* The sheet lives on ::after so the fibrous-edge filter (P4) never touches content. */
+/* Loose sheets (pad, notebook, panels, dialogs): sampled paper on ::after, run through
+   the fibrous-edge filter so the content on top stays crisp. */
 .paper {
   position: relative;
   isolation: isolate;
+  --tex: var(--tex-napkin);
   --paper-bg: var(--napkin);
 }
 .paper::after {
@@ -114,58 +120,52 @@ strong {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-color: var(--paper-bg);
-  background-image: var(--grain);
+  background: var(--tex) repeat, var(--paper-bg);
   box-shadow: var(--shadow-flat);
   filter: url(#fibers);
   will-change: transform;
   pointer-events: none;
 }
 
-/* P5: one pressed line, a hairline with a white highlight */
-.napkin-edge::before {
-  content: "";
-  position: absolute;
-  inset: var(--press, 24px);
-  border: 1.2px solid rgba(95, 82, 62, 0.13);
-  border-radius: 1px;
-  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.85), inset 1px 1px 0 rgba(255, 255, 255, 0.7);
-  pointer-events: none;
+/* Napkins: the reference's own napkin edge as a 9-slice frame (deckle, stitched pressed
+   border, lifted corner, shadow), the sampled napkin paper in the middle. */
+/* border = frame width − outset, so the paper fill starts exactly where the frame ends */
+.sheet-hero {
+  position: relative;
+  border: 33.6px solid transparent;
+  border-image: url("./assets/ref/sheet-hero.png") 50 / 40px / 6.4px stretch;
+  background: var(--tex-napkin) repeat padding-box, var(--napkin) padding-box;
+}
+.sheet-card {
+  position: relative;
+  border: 14.2px solid transparent;
+  border-image: url("./assets/ref/sheet-card.png") 24 / 19px / 4.8px stretch;
+  background: var(--tex-napkin) repeat padding-box, var(--napkin) padding-box;
 }
 
 /* ── ink ────────────────────────────────────────────────────────────── */
 
-.ink-bleed {
-  color: var(--ink);
-  text-shadow: 0 0 0.6px rgba(53, 50, 46, 0.55), 0 0 1.6px rgba(53, 50, 46, 0.12);
-}
-
-/* P6: rough pen outlines drawn by the `sketch` action (src/lib/rough.ts) */
-.sketched {
-  position: relative;
-}
-.sketch-svg {
-  position: absolute;
-  pointer-events: none;
-  overflow: visible;
-  z-index: 0;
-}
-.sketched > :not(.sketch-svg) {
-  position: relative;
-  z-index: 1;
-}
-
+/* Buttons are the reference buttons, 9-sliced: double pencil lines with grain. */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 22px 9px;
+  border: 14px solid transparent;
+  border-image: url("./assets/ref/btn-ink.png") 18 fill / 14px stretch;
+  padding: 0 12px 1px;
+  min-height: 50px;
   font-family: var(--hand);
   font-weight: 700;
   font-size: 17px;
   color: var(--ink);
   white-space: nowrap;
   transition: transform 0.08s ease;
+}
+.btn.clay {
+  border-image-source: url("./assets/ref/btn-clay.png");
+}
+.btn.side {
+  border-image: url("./assets/ref/btn-side.png") 16 fill / 13px stretch;
 }
 .btn:hover {
   transform: translate(-0.5px, -1px) rotate(-0.4deg);
@@ -175,10 +175,24 @@ strong {
 }
 .btn.small {
   font-size: 14px;
-  padding: 3px 13px 4px;
+  border-width: 9px;
+  border-image-width: 9px;
+  padding: 0 6px 1px;
+  min-height: 32px;
 }
 .btn.danger {
   color: var(--red-ink);
+}
+.btn:focus {
+  outline: none;
+}
+/* keyboard focus: a soft clay glow, like a highlighter swipe — never the blue system ring */
+.btn:focus-visible {
+  filter: drop-shadow(0 0 3px rgba(224, 118, 78, 0.55));
+}
+button:focus-visible:not(.btn) {
+  outline: 1.5px dashed rgba(224, 118, 78, 0.7);
+  outline-offset: 2px;
 }
 .btn:disabled {
   opacity: 0.45;
@@ -186,33 +200,43 @@ strong {
 }
 
 .kbd {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 10px;
   line-height: 1;
-  padding: 4px 6px 3px;
+  min-width: 30px;
+  height: 22px;
+  border: 7px solid transparent;
+  border-image: url("./assets/ref/kbd.png") 8 fill / 7px stretch;
+  padding: 0 1px;
   color: var(--ink-2);
   font-weight: 400;
   vertical-align: middle;
+  text-shadow: none;
 }
 
-/* P7: section labels get a tapered, rising brush stroke that runs past the word */
+/* the reference's brush underline: tapered, rising, runs past the word */
 .underlined {
   display: inline-block;
-  padding: 0 0.45em 5px 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'%3E%3Cpath d='M1 7.4 C 22 6.3, 58 5.6, 104 4.4 C 110 4.2, 116 3.2, 119 2 L 119.4 3.2 C 116 4.8, 110 5.8, 104 6 C 60 7.2, 24 8.4, 2 9.2 Z' fill='%2335322e' opacity='.9'/%3E%3C/svg%3E")
-    left bottom / 100% 9px no-repeat;
+  padding: 0 0.35em 7px 0;
+  background: url("./assets/ref/ul-label.png") left bottom / 100% 9.6px no-repeat;
+}
+.underlined.heading {
+  padding-bottom: 9px;
+  background-image: url("./assets/ref/ul-heading.png");
+  background-size: 100% 12.8px;
 }
 
-/* P7: links are blue ink with a heavier marker stroke */
+/* blue marker under links */
 .link {
   color: var(--blue-ink);
   font-family: var(--hand);
   font-weight: 400;
   font-size: 14.5px;
-  padding: 0 0.25em 5px 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'%3E%3Cpath d='M0.5 5.6 C 20 4.4, 45 6.4, 70 5.2 S 108 3.8, 119.5 4.6 L 119.5 7.4 C 106 6.6, 92 7.6, 70 8 C 44 8.6, 20 7.2, 1 8.4 Z' fill='%232c47a3' opacity='.85'/%3E%3C/svg%3E")
-    left bottom / 100% 8px no-repeat;
+  padding: 0 0.3em 7px 0;
+  background: url("./assets/ref/ul-link.png") left bottom / 100% 9.6px no-repeat;
 }
 .link:hover {
   color: var(--clay-deep);
@@ -238,16 +262,14 @@ strong {
   -webkit-app-region: drag;
 }
 
-/* P10: hand-drawn dividers */
+/* hand-drawn dividers, sampled */
 .squiggle {
-  height: 10px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='10' viewBox='0 0 28 10'%3E%3Cpath d='M0 5 C 3.5 1.5, 7 1.5, 7 5 S 10.5 8.5, 14 5 S 17.5 1.5, 21 5 S 24.5 8.5, 28 5' stroke='%2335322e' stroke-width='1.2' fill='none' opacity='.8'/%3E%3C/svg%3E")
-    left center / 28px 10px repeat-x;
+  height: 19px;
+  background: url("./assets/ref/wave.png") center / 100% 19px no-repeat;
 }
 .zigzag {
-  height: 10px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10' viewBox='0 0 18 10'%3E%3Cpath d='M0 5.5 Q 2.2 1.8, 4.5 3.2 T 9 5.2 T 13.5 3.8 T 18 5.5' stroke='%2335322e' stroke-width='1.25' fill='none' opacity='.75'/%3E%3C/svg%3E")
-    left center / 18px 10px repeat-x;
+  height: 21px;
+  background: url("./assets/ref/zigzag.png") center / 100% 21px no-repeat;
 }
 
 .status-needs_you {
@@ -290,6 +312,9 @@ strong {
 }
 .xterm-host .xterm-viewport {
   background-color: transparent !important;
+}
+.xterm-host .xterm * {
+  text-shadow: none;
 }
 
 @keyframes wiggle {

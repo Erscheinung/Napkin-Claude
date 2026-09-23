@@ -19,7 +19,7 @@ pub struct Project {
 }
 
 fn projects_root() -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
+    let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok()?;
     let base = std::env::var("CLAUDE_CONFIG_DIR").map(PathBuf::from).unwrap_or_else(|_| Path::new(&home).join(".claude"));
     Some(base.join("projects"))
 }

@@ -48,7 +48,7 @@ async fn app_info(app: AppHandle, state: State<'_, AppState>) -> R<AppInfo> {
     Ok(AppInfo {
         version: app.package_info().version.to_string(),
         fixture: std::env::var("NAPKIN_FIXTURE").ok().filter(|s| !s.is_empty()),
-        home: env.vars.get("HOME").cloned().unwrap_or_default(),
+        home: env.vars.get("HOME").or_else(|| env.vars.get("USERPROFILE")).cloned().unwrap_or_default(),
         data_dir: state.home.display().to_string(),
         env,
     })
@@ -99,8 +99,8 @@ fn napkins_list(state: State<'_, AppState>) -> Vec<NapkinView> {
 
 /// Whether a folder is sane to snapshot. `None` means yes; `Some(reason)` means no.
 fn tracking_veto(project: &Path, shadow: &Shadow) -> Option<String> {
-    let home = std::env::var("HOME").unwrap_or_default();
-    if project == Path::new("/") || project == Path::new(&home) {
+    let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_default();
+    if project.parent().is_none() || project == Path::new(&home) {
         return Some("tracking is off for your home folder — pick a project folder to get rollback".into());
     }
     if !envprobe::get().git {
@@ -169,6 +169,7 @@ async fn napkin_open(
     id: String,
     cols: u16,
     rows: u16,
+    doodle: Option<bool>,
     on_data: Channel<InvokeResponseBody>,
 ) -> R<pty::Spawned> {
     let n = state.store.get(&id).ok_or("no such napkin")?;
@@ -186,6 +187,9 @@ async fn napkin_open(
         "--settings".into(),
         hook::settings_json(&exe),
     ];
+    if doodle.unwrap_or(false) {
+        args.extend(["--append-system-prompt".into(), DOODLE_PROMPT.into()]);
+    }
     if !resume && n.title != "fresh napkin" {
         args.extend(["--name".into(), n.title.clone()]);
     }
@@ -216,6 +220,16 @@ async fn napkin_open(
     let _ = state.store.update(&id, |n| n.updated_at = events::now_ms());
     Ok(spawned)
 }
+
+/// Teaches Claude the sketch format so it can read the user's napkin sketches and draw back.
+const DOODLE_PROMPT: &str = "This session runs inside Napkin, which has a sketch pad. Sketches live in \
+.napkin/sketches/: <name>.md (ASCII drawing + shape list; read this when the user references a sketch), \
+<name>.png, and <name>.napkin.json. You may draw for the user (diagrams, layouts, flows) by writing \
+.napkin/sketches/<name>.napkin.json; Napkin shows it live. Format: {\"version\":1,\"name\":\"<name>\",\"shapes\":[\
+{\"kind\":\"rect|ellipse|diamond|line|arrow|pen|text\",\"x\":40,\"y\":40,\"w\":160,\"h\":70,\"text\":\"label\",\
+\"color\":\"#35322e\",\"fill\":false}]}. Boxes use x,y = top-left and w,h = size; line/arrow use x,y = start and \
+w,h = delta to the end; pen uses \"points\":[[x,y],...]; text uses x,y = top-left. Canvas is about 900x560 px. \
+Colors: #35322e graphite, #e0764e clay, #b8392b red, #2c47a3 blue, #2f6b34 green. Only draw when it helps.";
 
 #[tauri::command]
 fn napkin_attach(state: State<'_, AppState>, id: String) -> Vec<Event> {
@@ -296,6 +310,29 @@ async fn napkin_changes(state: State<'_, AppState>, id: String, from: Option<Str
         };
         let files = shadow.changes(&from, &to)?;
         Ok(Changes { from, to, files })
+    })
+    .await
+}
+
+/// Start a fresh ink record (new boundary) — used when the old snapshots are gone.
+#[tauri::command]
+async fn napkin_rebase(state: State<'_, AppState>, id: String) -> R<Napkin> {
+    let n = state.store.get(&id).ok_or("no such napkin")?;
+    let home = state.home.clone();
+    let store = state.store.clone();
+    blocking(move || {
+        let shadow = Shadow::new(&home, Path::new(&n.project), &id);
+        shadow.ensure()?;
+        let cp = shadow.snapshot("napkin boundary (fresh record)")?;
+        let mut e = Event::new("boundary");
+        e.cp = Some(cp.clone());
+        e.label = Some("fresh ink record".into());
+        events::append(&events::log_path(&home, &id), &e).map_err(|e| e.to_string())?;
+        store.update(&id, |n| {
+            n.boundary = Some(cp);
+            n.tracking = true;
+            n.tracking_note = None;
+        })
     })
     .await
 }
@@ -400,15 +437,21 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             app.set_menu(menu(app.handle())?)?;
-            if std::env::var("NAPKIN_FIXTURE").is_ok_and(|s| !s.is_empty()) {
-                if let Some(w) = app.get_webview_window("main") {
+            if let Some(w) = app.get_webview_window("main").filter(|_| std::env::var("NAPKIN_FIXTURE").is_ok_and(|s| !s.is_empty())) {
+                // screenshots / gate: occluded webviews don't paint, so come to the front
+                let _ = w.set_focus();
+                if std::env::var("NAPKIN_FIXTURE").is_ok_and(|s| s == "reference") {
                     // 1360×850 at 0.85 zoom = a 1600×1000 CSS viewport, fits a 13" screen
                     let _ = w.set_size(tauri::LogicalSize::new(1360.0, 850.0));
                     let _ = w.set_zoom(0.85);
                     let _ = w.center();
                 }
             }
-            let home = app.path().app_data_dir()?;
+            // NAPKIN_DATA_DIR isolates a run (screenshots, tests) from the real napkin store
+            let home = match std::env::var("NAPKIN_DATA_DIR") {
+                Ok(d) if !d.is_empty() => PathBuf::from(d),
+                _ => app.path().app_data_dir()?,
+            };
             std::fs::create_dir_all(home.join("napkins"))?;
             let tailer = events::Tailer::default();
             tailer.start(app.handle().clone());
@@ -438,6 +481,7 @@ pub fn run() {
             napkin_forget,
             napkin_changes,
             napkin_file_diff,
+            napkin_rebase,
             napkin_checkpoint,
             napkin_rollback,
             sketch_list,

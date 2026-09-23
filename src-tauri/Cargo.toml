@@ -28,3 +28,8 @@ lto = true
 codegen-units = 1
 strip = true
 opt-level = 3
+
+# strip=true would also strip proc-macro dylibs on macOS ("can't find crate for …_macros")
+[profile.release.build-override]
+strip = false
+debug = false

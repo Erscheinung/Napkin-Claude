@@ -86,7 +86,8 @@ fn truncate(s: &str, max: usize) -> String {
 
 /// The hook config handed to `claude --settings`. Only touches this one session.
 pub fn settings_json(exe: &str) -> String {
-    let quoted = format!("'{}'", exe.replace('\'', r"'\''"));
+    // Claude Code runs hook commands through a shell: POSIX quoting, or plain double quotes on Windows
+    let quoted = if cfg!(windows) { format!("\"{exe}\"") } else { format!("'{}'", exe.replace('\'', r"'\''")) };
     let cmd = format!("{quoted} hook");
     let h = |matcher: Option<&str>, timeout: u32| {
         let mut entry = serde_json::json!({ "hooks": [{ "type": "command", "command": cmd, "timeout": timeout }] });
@@ -138,7 +139,7 @@ pub fn statusline() -> i32 {
 
 /// The user's own statusLine command from ~/.claude/settings.json, so we can chain it.
 pub fn user_statusline() -> Option<String> {
-    let home = std::env::var("HOME").ok()?;
+    let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok()?;
     let base = std::env::var("CLAUDE_CONFIG_DIR").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(home).join(".claude"));
     let v: Value = serde_json::from_slice(&std::fs::read(base.join("settings.json")).ok()?).ok()?;
     let sl = v.get("statusLine")?;

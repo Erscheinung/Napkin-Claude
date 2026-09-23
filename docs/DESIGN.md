@@ -4,15 +4,31 @@ The look is defined by `docs/reference.png` (Kevin Ngo's original concept). Thes
 principles taken from studying it at full resolution. Any UI change has to pass the gate at
 the bottom before it's committed.
 
+## 0. Sample, don't synthesize
+
+The reference is a *painted* image. Every surface is real paper, and every line is a pencil or
+marker stroke with grain and pressure. Vector UI with effects layered on top always reads as
+bland and geometric next to it. So the reference itself is the material library:
+`scripts/fidelity/extract-assets.sh` samples it into `src/assets/ref/`:
+
+- **paper:** mirror-tiled, seamless napkin / notebook / desk tiles, plus the ruled pad as one exact line period
+- **sheets:** the napkin's and cards' own edges as 9-slice frames (deckle, stitched pressed border, lifted corner, shadow)
+- **ink:** buttons and keys (9-slice, text wiped), underlines, link strokes, wave and zigzag dividers, check, folder
+- **marks:** the torn pad top with its glue, the coffee ring, the marker headline, the four mascot moods
+
+Ink sprites are lifted off their paper (color-to-alpha), so they composite onto any surface.
+Tiles get a small contrast boost to offset upscaling a 1× sample on 2× screens (calibrated by
+G2/G3). Only what must be dynamic (text, variable lengths) is rendered live.
+
 ## 1. The paper is quiet, and the ink is loud
 
 | Principle | What the reference does | Anti-pattern (what went wrong before) |
 |---|---|---|
-| **P1 Silent paper** | Paper is nearly flat. The grain is fine and isotropic, luminance σ is ≈1–3 levels, and there are no visible creases. | Directional "crinkle" streaks; wood-grain look; tiling seams |
+| **P1 Quiet but alive paper** | Fine isotropic grain (σ ≈ 1.5–4) with soft crumple (low-frequency σ ≈ 1–4). There are no hard creases. | Directional "crinkle" streaks, tiling seams, *and* dead-flat vector fills |
 | **P2 Surfaces differ by hue, not by texture** | measured means: napkin `rgb(249,245,238)` · pad `rgb(250,247,232)` ruled · notebook `rgb(247,240,220)` · desk `rgb(221,212,197)` | One paper color everywhere with heavy texture on top |
 | **P3 Papers lie flat** | Shadows are short and soft (≈2–6 px blur, ≤10% alpha). Nothing floats. | Big drop shadows; tilted cards |
 | **P4 Edges are fibrous, not torn** | Napkin edges are softly feathered with ±1–2 px irregularity. Only the pad has a torn top, with a pinkish binding strip. | Displacement big enough to warp whole sheets |
-| **P5 One pressed line** | The napkin has a single embossed rectangle ~30 px in (a dark hairline plus a white highlight). Cards have the same at ~12 px. | Dotted quilting bands |
+| **P5 Stitched pressed border** | The napkin has an embossed double line ~30 px in with a row of tiny pressed dots between the lines. Cards have a lighter version at ~12 px. | Hard gray frames; clean CSS borders |
 
 ## 2. Everything is drawn with a pen
 
@@ -50,8 +66,8 @@ scales it to 2000×1250, and checks it against `docs/reference.png`:
 | Gate | Check | Pass |
 |---|---|---|
 | **G1 color** | mean RGB of desk, napkin, pad, notebook patches | each channel within ±8 of reference |
-| **G2 quiet paper** | fine luminance σ of each paper patch | ≤ 1.6× reference σ + 1 |
-| **G3 no streaks** | σ of 8×8-block means (low-frequency variance) | ≤ 1.5× reference + 1 |
+| **G2 grain** | fine luminance σ of each paper patch | 0.55×–1.6× reference (too flat fails as well as too loud) |
+| **G3 crumple** | σ of 8×8-block means (low-frequency variance) | 0.45×–1.5× reference |
 | **G4 layout** | DOM rects of sidebar / hero / recent / cards reported by the fixture | edges within 3% of canvas |
 | **G5 eyeball** | side-by-side image `scripts/fidelity/out/side-by-side.png` reviewed against §1–§3 | every principle ✓ |
 

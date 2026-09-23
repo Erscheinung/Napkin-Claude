@@ -2,7 +2,6 @@
   // Toast, crumple dialog and ⌘K palette — everything that floats above the desk.
   import { api, type Changes } from "../lib/api";
   import { app } from "../lib/state.svelte";
-  import { sketch, PEN } from "../lib/rough";
   import { ago, basename, tildify } from "../lib/format";
   import Critter from "./Critter.svelte";
 
@@ -125,7 +124,7 @@
 
 {#if crumpleN}
   <div class="scrim" role="presentation" onclick={() => !crumpleBusy && (app.crumpling = null)}>
-    <div class="dialog paper napkin-edge" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === "Escape" && (app.crumpling = null)}>
+    <div class="dialog sheet-card" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === "Escape" && (app.crumpling = null)}>
       <div class="d-head">
         <Critter size={52} mood="needs_you" />
         <div>
@@ -160,12 +159,12 @@
         <p class="muted">ink tracking was off for this napkin, so there's nothing to wipe.</p>
       {/if}
       <div class="d-actions">
-        <button class="btn" use:sketch={PEN.graphite} onclick={() => (app.crumpling = null)} disabled={crumpleBusy}><span>never mind</span></button>
+        <button class="btn" onclick={() => (app.crumpling = null)} disabled={crumpleBusy}><span>never mind</span></button>
         <span class="spacer"></span>
         {#if crumpleChanges?.files.length}
-          <button class="btn danger" use:sketch={{ ...PEN.clay, stroke: "#b8392b", fill: "#fbeee9" }} onclick={() => doCrumple(true)} disabled={crumpleBusy}><span>wipe clean & crumple</span></button>
+          <button class="btn danger" onclick={() => doCrumple(true)} disabled={crumpleBusy}><span>wipe clean & crumple</span></button>
         {/if}
-        <button class="btn primary" use:sketch={PEN.clay} onclick={() => doCrumple(false)} disabled={crumpleBusy} use:autofocus>
+        <button class="btn clay" onclick={() => doCrumple(false)} disabled={crumpleBusy} use:autofocus>
           <span>{crumpleChanges?.files.length ? "keep the ink & crumple" : "crumple"}</span>
         </button>
       </div>
@@ -175,7 +174,7 @@
 
 {#if app.paletteOpen}
   <div class="scrim top" role="presentation" onclick={() => (app.paletteOpen = false)}>
-    <div class="palette paper" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
+    <div class="palette sheet-card" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
       <input class="p-input" placeholder="jump to a napkin, project, or action…" bind:value={query} onkeydown={paletteKey} use:autofocus />
       <ul class="p-list">
         {#each items as it, i (it.kind + it.label + i)}

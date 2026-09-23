@@ -75,9 +75,14 @@ class AppState {
   // ── lifecycle ────────────────────────────────────────────────────────────
 
   fixture = $state<string | null>(null);
+  /** screenshot extras: "diff" | "palette" | "crumple" */
+  fixtureExtra = $state<string | null>(null);
 
   async init() {
     this.fixture = await api.fixture().catch(() => null);
+    // `NAPKIN_FIXTURE=open:<napkin id>[:sketch]` — launch straight into a real napkin (screenshots)
+    const openOnStart = this.fixture?.startsWith("open:") ? this.fixture.split(":") : null;
+    if (openOnStart) this.fixture = null;
     if (this.fixture) {
       const { referenceFixture } = await import("./fixture");
       const f = referenceFixture(Date.now());
@@ -96,6 +101,12 @@ class AppState {
     this.napkins = napkins;
     api.appInfo().then((i) => (this.info = i));
     for (const n of this.onTable) this.ensureLive(n.id);
+    if (openOnStart?.[1] && this.napkin(openOnStart[1])) {
+      this.open(openOnStart[1], openOnStart[2] === "sketch" ? "sketch" : "talk");
+      this.fixtureExtra = openOnStart[3] ?? null;
+      if (this.fixtureExtra === "palette") setTimeout(() => (this.paletteOpen = true), 1500);
+      if (this.fixtureExtra === "crumple") setTimeout(() => (this.crumpling = openOnStart[1]), 1500);
+    }
   }
 
   async refreshProjects() {

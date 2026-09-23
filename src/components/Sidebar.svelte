@@ -1,9 +1,10 @@
 <script lang="ts">
   import { app } from "../lib/state.svelte";
-  import { sketch } from "../lib/rough";
   import { agoShort, basename, STATUS_LABEL } from "../lib/format";
   import Critter from "./Critter.svelte";
   import TheTab from "./TheTab.svelte";
+  import torn from "../assets/ref/torn-top.png";
+  import folder from "../assets/ref/folder.png";
 
   let showCrumpled = $state(false);
 
@@ -18,22 +19,20 @@
     return [...byProject.entries()].map(([path, items]) => ({ path, name: basename(path), items }));
   });
 
-  const CLAY = { stroke: "#e0764e", fill: "#f7d7c7", double: true, radius: 6, width: 1.6 };
-  const KEY = { stroke: "#5f5a52", radius: 3, width: 1.1, pad: 3, roughness: 0.8 };
 </script>
 
 <div class="traffic drag"></div>
 <aside class="sidebar paper" data-fx="sidebar">
-  <div class="binding" aria-hidden="true"></div>
+  <img class="torn" src={torn} alt="" />
 
   <button class="brand" onclick={() => app.home()} title="back to the desk">
-    <span class="word ink-bleed">napkin</span>
+    <span class="word">napkin</span>
     <Critter size={40} mood="ready" />
   </button>
 
   <div class="new-row">
-    <button class="btn" use:sketch={CLAY} onclick={() => app.newNapkin()}><span>+ new napkin</span></button>
-    <span class="kbd" use:sketch={KEY}>⌘N</span>
+    <button class="btn side" onclick={() => app.newNapkin()}><span>+ new napkin</span></button>
+    <span class="kbd">⌘N</span>
   </div>
 
   <div class="scroll">
@@ -69,9 +68,7 @@
         title={p.exists ? `new napkin in ${p.path}` : `${p.path} no longer exists`}
       >
         <span class="chev">›</span>
-        <svg class="folder" viewBox="0 0 26 20" width="21" height="16" aria-hidden="true">
-          <path d="M2 4.5 L2.4 17.6 L22.8 17.2 L23.4 6.8 L12 7 L10.2 3.6 L2.6 3.8 Z M2.4 8.6 L23 8.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" />
-        </svg>
+        <img class="folder" src={folder} alt="" />
         <span class="proj-name">{p.name}</span>
         <span class="proj-meta">{p.sessions} · {agoShort(p.last_active, app.now)}</span>
       </button>
@@ -123,26 +120,20 @@
     padding: 38px 20px 16px 20px;
     z-index: 2;
   }
-  /* ruled lines, on the paper layer so content sits on top */
+  /* the sampled pad paper: one ruled period repeated down the strip */
   .sidebar::after {
-    background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)),
-      var(--grain);
-    background-position: 0 14px, 0 0;
+    top: 12px;
+    background: url("../assets/ref/tex-pad.png") 0 0 / 100% 31.12px repeat-y, var(--pad);
   }
-  /* the pink binding left behind when the sheet was torn off the pad */
-  .binding {
+  /* the torn top with glue left on it, straight from the reference */
+  .torn {
     position: absolute;
-    top: -3px;
+    top: -9px;
     left: 0;
-    right: 0;
-    height: 9px;
-    background: linear-gradient(to bottom, rgba(214, 140, 120, 0.55), rgba(226, 170, 150, 0.35));
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='9' viewBox='0 0 90 9' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H90 V5 L87 7.5 L84 5.5 L80 8 L77 6 L73 7.8 L70 5.2 L66 7.6 L62 5.8 L59 8.2 L55 5.6 L52 7.4 L48 5 L45 7.9 L41 6 L38 8 L34 5.4 L31 7.7 L27 5.9 L24 8.3 L20 5.5 L17 7.2 L13 5.2 L10 7.9 L6 6 L3 7.6 L0 5.5 Z'/%3E%3C/svg%3E")
-      0 0 / 90px 9px repeat-x;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='9' viewBox='0 0 90 9' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H90 V5 L87 7.5 L84 5.5 L80 8 L77 6 L73 7.8 L70 5.2 L66 7.6 L62 5.8 L59 8.2 L55 5.6 L52 7.4 L48 5 L45 7.9 L41 6 L38 8 L34 5.4 L31 7.7 L27 5.9 L24 8.3 L20 5.5 L17 7.2 L13 5.2 L10 7.9 L6 6 L3 7.6 L0 5.5 Z'/%3E%3C/svg%3E")
-      0 0 / 90px 9px repeat-x;
-    filter: url(#fibers);
+    width: 100%;
+    height: 20.8px;
     pointer-events: none;
+    z-index: 1;
   }
   .brand {
     display: flex;
@@ -154,9 +145,8 @@
     font-family: var(--marker);
     font-size: 40px;
     line-height: 0.95;
-    padding: 0 4px 5px 0;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'%3E%3Cpath d='M1 6 C 30 5, 70 4.6, 118 5.2 M3 8.4 C 40 7.4, 80 7.6, 116 7' stroke='%2335322e' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
-      left bottom / 100% 10px no-repeat;
+    padding: 0 6px 10px 0;
+    background: url("../assets/ref/ul-brand.png") left bottom / 100% 12.8px no-repeat;
   }
   .new-row {
     display: flex;
@@ -166,7 +156,8 @@
   }
   .new-row .btn {
     font-size: 17px;
-    padding: 8px 22px 10px;
+    padding: 0 10px 1px;
+    min-height: 44px;
   }
   .scroll {
     flex: 1;
@@ -261,8 +252,9 @@
     width: 8px;
   }
   .folder {
-    color: var(--ink-2);
     flex: none;
+    width: 23px;
+    height: 17px;
   }
   .proj-name {
     flex: 1;

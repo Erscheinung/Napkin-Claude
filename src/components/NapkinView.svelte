@@ -1,6 +1,5 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import { sketch, PEN } from "../lib/rough";
   import { app } from "../lib/state.svelte";
   import { getTerm } from "../lib/terminals.svelte";
   import { STATUS_LABEL, tildify } from "../lib/format";
@@ -81,22 +80,22 @@
 
       <nav class="tabs">
         <button class:on={tab === "talk"} onclick={() => setTab("talk")}>talk</button>
-        <button class:on={tab === "sketch"} onclick={() => setTab("sketch")}>sketch <span class="kbd" use:sketch={PEN.key}>⌘⇧S</span></button>
+        <button class:on={tab === "sketch"} onclick={() => setTab("sketch")}>sketch <span class="kbd">⌘⇧S</span></button>
       </nav>
 
       <div class="actions">
         {#if !n.running && tab === "talk"}
-          <button class="btn small" use:sketch={PEN.small} onclick={() => getTerm(id).start()}><span>pick it back up</span></button>
+          <button class="btn small" onclick={() => getTerm(id).start()}><span>pick it back up</span></button>
         {/if}
-        <button class="btn small" use:sketch={PEN.small} onclick={() => (showPanel = !showPanel)} title="toggle the ink spill (⌘B)">
+        <button class="btn small" onclick={() => (showPanel = !showPanel)} title="toggle the ink spill (⌘B)">
           <span>{showPanel ? "hide" : "show"} ink spill</span>
         </button>
-        <button class="btn small danger" use:sketch={PEN.danger} onclick={() => (app.crumpling = id)} title="crumple this napkin (⌘W)"><span>crumple</span></button>
+        <button class="btn small danger" onclick={() => (app.crumpling = id)} title="crumple this napkin (⌘W)"><span>crumple</span></button>
       </div>
     </header>
 
     <div class="body">
-      <div class="sheet paper napkin-edge" class:sketching={tab === "sketch"}>
+      <div class="sheet sheet-hero" class:sketching={tab === "sketch"}>
         {#if tab === "talk"}
           <div class="term" bind:this={host}></div>
           <div class="grain" aria-hidden="true"></div>
@@ -201,7 +200,7 @@
     font-size: 17px;
     padding: 2px 12px 4px;
     color: var(--ink-3);
-    border-radius: var(--sketch-radius-2);
+    border-radius: 6px;
   }
   .tabs button.on {
     color: var(--ink);
@@ -228,8 +227,7 @@
   .sheet {
     flex: 1;
     min-width: 0;
-    --paper-bg: var(--napkin);
-    padding: 34px 26px 30px 38px;
+    padding: 0 0 0 4px;
     display: flex;
   }
   .sheet.sketching {
